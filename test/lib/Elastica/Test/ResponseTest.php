@@ -1,7 +1,9 @@
 <?php
 
 namespace Elastica\Test;
+
 use Elastica\Document;
+use Elastica\Exception\NotFoundException;
 use Elastica\Facet\DateHistogram;
 use Elastica\Query;
 use Elastica\Query\MatchAll;
@@ -44,13 +46,31 @@ class ResponseTest extends BaseTest
 
         $resultSet = $type->search($query);
 
-        $engineTime = $resultSet->getResponse()->getEngineTime();
-        $shardsStats = $resultSet->getResponse()->getShardsStatistics();
+        $response = $resultSet->getResponse();
+
+        $engineTime = $response->getEngineTime();
+        $shardsStats = $response->getShardsStatistics();
 
         $this->assertInternalType('int', $engineTime);
         $this->assertTrue(is_array($shardsStats));
         $this->assertArrayHasKey('total', $shardsStats);
         $this->assertArrayHasKey('successful', $shardsStats);
+
+        $this->assertTrue($response->hasData('took'));
+        $this->assertInternalType('int', $response->getData('took'));
+        $this->assertTrue($response->hasData('_shards'));
+        $this->assertInternalType('array', $response->getData('_shards'));
+        $this->assertTrue($response->hasData('hits'));
+        $this->assertInternalType('array', $response->getData('hits'));
+
+        $this->assertFalse($response->hasData('invalid'));
+
+        try {
+            $response->getData('invalid');
+            $this->fail('Invalid data get should fail');
+        } catch (NotFoundException $e) {
+            $this->assertContains('Unable to find field', $e->getMessage());
+        }
     }
 
     public function testIsOk()

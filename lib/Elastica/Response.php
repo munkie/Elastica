@@ -1,6 +1,7 @@
 <?php
 
 namespace Elastica;
+
 use Elastica\Exception\NotFoundException;
 
 /**
@@ -96,7 +97,7 @@ class Response
      *
      * @param string $field
      * @return array|mixed
-     * @throws \Elastica\Exception\InvalidException
+     * @throws \Elastica\Exception\NotFoundException
      */
     public function getData($field = null)
     {
@@ -105,7 +106,7 @@ class Response
         } elseif (isset($this->_response[$field])) {
             return $this->_response[$field];
         } else {
-            throw new InvalidException('Unable to find field [' . $field . '] in response');
+            throw new NotFoundException('Unable to find field [' . $field . '] in response');
         }
     }
 
@@ -218,7 +219,7 @@ class Response
      */
     public function getShardsStatistics()
     {
-        if ($this->hasData('_shards')) {
+        if (!$this->hasData('_shards')) {
             throw new NotFoundException("Unable to find the field [_shards] from the response");
         }
 
