@@ -111,6 +111,24 @@ class ResponseSetTest extends BaseTest
         $this->assertInstanceOf('Elastica\Bulk\Response', $responseSet->current());
     }
 
+    public function testIsOkOnBulkDelete()
+    {
+        list($responseData, $actions) = $this->_getFixture();
+
+        foreach ($responseData['items'] as &$item) {
+            $item['delete'] = $item['index'];
+            unset($item['index']);
+        }
+
+        $responseSet = $this->_createResponseSet($responseData, $actions);
+
+        $this->assertTrue($responseSet->isOk());
+
+        foreach ($responseSet as $response) {
+            $this->assertEquals('delete', $response->getOpType());
+        }
+    }
+
     public function isOkDataProvider()
     {
         list($responseData, $actions) = $this->_getFixture();

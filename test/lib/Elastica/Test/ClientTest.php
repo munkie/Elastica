@@ -353,8 +353,9 @@ class ClientTest extends BaseTest
 
         // Using the existing $index and $type variables which
         // are \Elastica\Index and \Elastica\Type objects respectively
-        $resp = $index->getClient()->deleteIds($ids, $index, $type);
+        $responseSet = $index->getClient()->deleteIds($ids, $index, $type);
 
+        $this->assertTrue($responseSet->isOk());
         // Refresh the index to clear out deleted ID information
         $index->refresh();
 

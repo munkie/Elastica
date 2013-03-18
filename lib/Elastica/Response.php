@@ -19,7 +19,7 @@ class Response
      *
      * @var float Query time
      */
-    protected $_queryTime = null;
+    protected $_queryTime;
 
     /**
      * Response string (json)
@@ -47,7 +47,7 @@ class Response
      *
      * @var \Elastica\Response Response object
      */
-    protected $_response = null;
+    protected $_response;
 
     /**
      * Construct
@@ -70,14 +70,13 @@ class Response
      */
     public function getError()
     {
-        $message = '';
-        $response = $this->getData();
+        $data = $this->getData();
 
-        if (isset($response['error'])) {
-            $message = $response['error'];
+        if (isset($data['error'])) {
+            return $data['error'];
+        } else {
+            return '';
         }
-
-        return $message;
     }
 
     /**
@@ -87,13 +86,13 @@ class Response
      */
     public function hasError()
     {
-        $response = $this->getData();
+        $data = $this->getData();
 
-        if (isset($response['error'])) {
+        if (isset($data['error'])) {
             return true;
+        } else {
+            return false;
         }
-
-        return false;
     }
 
     /**
@@ -105,18 +104,11 @@ class Response
     {
         $data = $this->getData();
 
-        // Bulk insert checks. Check every item
-        if (isset($data['items'])) {
-            foreach ($data['items'] as $item) {
-                if (false == $item['index']['ok']) {
-                    return false;
-                 }
-            }
-
+        if (isset($data['ok']) && $data['ok']) {
             return true;
+        } else {
+            return false;
         }
-
-        return (isset($data['ok']) && $data['ok']);
     }
 
     /**
