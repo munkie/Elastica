@@ -22,20 +22,6 @@ class Response
     protected $_queryTime;
 
     /**
-     * Response string (json)
-     *
-     * @var string Response
-     */
-    protected $_responseString = '';
-
-    /**
-     * Error
-     *
-     * @var boolean Error
-     */
-    protected $_error = false;
-
-    /**
      * Transfer info
      *
      * @var array transfer info
@@ -52,14 +38,14 @@ class Response
     /**
      * Construct
      *
-     * @param string|array $responseString Response string (json)
+     * @param string|array $response Response string (json)
      */
-    public function __construct($responseString)
+    public function __construct($response)
     {
-        if (is_array($responseString)) {
-            $this->_response = $responseString;
+        if (is_array($response)) {
+            $this->_response = $response;
         } else {
-            $this->_responseString = $responseString;
+            $this->_response = $this->_parseResponse($response);
         }
     }
 
@@ -70,10 +56,8 @@ class Response
      */
     public function getError()
     {
-        $data = $this->getData();
-
-        if (isset($data['error'])) {
-            return $data['error'];
+        if ($this->hasData('error')) {
+            return $this->getData('error');
         } else {
             return '';
         }
@@ -86,9 +70,7 @@ class Response
      */
     public function hasError()
     {
-        $data = $this->getData();
-
-        if (isset($data['error'])) {
+        if ($this->hasData('error')) {
             return true;
         } else {
             return false;
@@ -102,9 +84,7 @@ class Response
      */
     public function isOk()
     {
-        $data = $this->getData();
-
-        if (isset($data['ok']) && $data['ok']) {
+        if ($this->hasData('ok') && $this->getData('ok')) {
             return true;
         } else {
             return false;
@@ -112,37 +92,60 @@ class Response
     }
 
     /**
-     * Response data array
+     * Get whole response as array or one field by field name
      *
-     * @return array Response data array
+     * @param string $field
+     * @return array|mixed
+     * @throws \Elastica\Exception\InvalidException
      */
-    public function getData()
+    public function getData($field = null)
     {
-        if ($this->_response == null) {
-            $response = $this->_responseString;
-            if ($response === false) {
-                $this->_error = true;
-            } else {
+        if (null === $field) {
+            return $this->_response;
+        } elseif (isset($this->_response[$field])) {
+            return $this->_response[$field];
+        } else {
+            throw new InvalidException('Unable to find field [' . $field . '] in response');
+        }
+    }
 
-                $tempResponse = json_decode($response, true);
-                // If error is returned, json_decode makes empty string of string
-                if (!empty($tempResponse)) {
-                    $response = $tempResponse;
-                }
+    /**
+     * Check if field exists in response data
+     *
+     * @param string $field
+     * @return bool
+     */
+    public function hasData($field)
+    {
+        if (isset($this->_response[$field])) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @param string $response
+     * @return array|bool|mixed
+     */
+    protected function _parseResponse($response)
+    {
+        if ($response !== false) {
+
+            $tempResponse = json_decode($response, true);
+            // If error is returned, json_decode makes empty string of string
+            if (!empty($tempResponse)) {
+                $response = $tempResponse;
             }
-
-            if (empty($response)) {
-                $response = array();
-            }
-
-            if (is_string($response)) {
-                $response = array('message' => $response);
-            }
-
-            $this->_response = $response;
         }
 
-        return $this->_response;
+        if (empty($response)) {
+            $response = array();
+        } elseif (is_string($response)) {
+            $response = array('message' => $response);
+        }
+
+        return $response;
     }
 
     /**
@@ -200,13 +203,11 @@ class Response
      */
     public function getEngineTime()
     {
-        $data = $this->getData();
-
-        if (!isset($data['took'])) {
+        if (!$this->hasData('took')) {
             throw new NotFoundException("Unable to find the field [took]from the response");
         }
 
-        return $data['took'];
+        return $this->getData('took');
     }
 
     /**
@@ -217,12 +218,10 @@ class Response
      */
     public function getShardsStatistics()
     {
-        $data = $this->getData();
-
-        if (!isset($data['_shards'])) {
+        if ($this->hasData('_shards')) {
             throw new NotFoundException("Unable to find the field [_shards] from the response");
         }
 
-        return $data['_shards'];
+        return $this->getData('_shards');
     }
 }
