@@ -4,22 +4,14 @@ namespace Elastica\Test;
 
 use Elastica\Document;
 use Elastica\Exception\NotFoundException;
-use Elastica\Facet\DateHistogram;
 use Elastica\Query;
 use Elastica\Query\MatchAll;
+use Elastica\Response;
 use Elastica\Type\Mapping;
 use Elastica\Test\Base as BaseTest;
 
 class ResponseTest extends BaseTest
 {
-    public function testClassHierarchy()
-    {
-        $facet = new DateHistogram('dateHist1');
-        $this->assertInstanceOf('Elastica\Facet\Histogram', $facet);
-        $this->assertInstanceOf('Elastica\Facet\AbstractFacet', $facet);
-        unset($facet);
-    }
-
     public function testResponse()
     {
         $index = $this->_createIndex();
@@ -96,5 +88,72 @@ class ResponseTest extends BaseTest
         $response = $type->addDocuments($docs);
 
         $this->assertTrue($response->isOk());
+    }
+
+    public function testConstructRawResponseDataJson()
+    {
+        $rawData = '{"error":"error message"}';
+        $response = new Response($rawData);
+
+        $this->assertTrue($response->hasError());
+        $this->assertEquals('error message', $response->getError());
+
+        $this->assertFalse($response->isOk());
+
+        try {
+            $response->getEngineTime();
+            $this->fail('getEngineTime should fail');
+        } catch (NotFoundException $e) {
+            $this->assertEquals("Unable to find field [took] in response", $e->getMessage());
+        }
+
+        try {
+            $response->getShardsStatistics();
+            $this->fail('getShardsStatistics should fail');
+        } catch (NotFoundException $e) {
+            $this->assertEquals("Unable to find field [_shards] in response", $e->getMessage());
+        }
+    }
+
+    public function testConstructRawResponseDataEmpty()
+    {
+        $rawData = '';
+        $response = new Response($rawData);
+
+        $this->assertFalse($response->isOk());
+        $this->assertEquals(array(), $response->getData());
+    }
+
+    public function testConstructRawResponseDataString()
+    {
+        $rawData = 'string';
+        $response = new Response($rawData);
+
+        $this->assertFalse($response->isOk());
+
+        $this->assertFalse($response->hasError());
+        $this->assertEquals('', $response->getError());
+
+        $this->assertTrue($response->hasData('message'));
+        $this->assertEquals('string', $response->getData('message'));
+    }
+
+    public function testQueryTime()
+    {
+        $queryTime = 2.3;
+
+        $response = new Response(array('ok' => 1));
+
+        $response->setQueryTime($queryTime);
+        $this->assertEquals($queryTime, $response->getQueryTime());
+    }
+
+    public function testTransferInfo()
+    {
+        $transferInfo = array('status' => 'ok');
+
+        $response = new Response(array('ok' => 1));
+        $response->setTransferInfo($transferInfo);
+        $this->assertEquals($transferInfo, $response->getTransferInfo());
     }
 }

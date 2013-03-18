@@ -106,9 +106,7 @@ class ResultSet implements \Iterator, \Countable
      */
     public function hasFacets()
     {
-        $data = $this->_response->getData();
-
-        return isset($data['facets']);
+        return $this->_response->hasData('facets');
     }
 
     /**
@@ -118,9 +116,11 @@ class ResultSet implements \Iterator, \Countable
      */
     public function getFacets()
     {
-        $data = $this->_response->getData();
-
-        return isset($data['facets']) ? $data['facets'] : array();
+        if ($this->_response->hasData('facets')) {
+            return $this->_response->getData('facets');
+        } else {
+            return array();
+        }
     }
 
     /**

@@ -127,12 +127,11 @@ class Response
 
     /**
      * @param string $response
-     * @return array|bool|mixed
+     * @return array
      */
     protected function _parseResponse($response)
     {
-        if ($response !== false) {
-
+        if (is_string($response)) {
             $tempResponse = json_decode($response, true);
             // If error is returned, json_decode makes empty string of string
             if (!empty($tempResponse)) {
@@ -140,10 +139,10 @@ class Response
             }
         }
 
-        if (empty($response)) {
-            $response = array();
-        } elseif (is_string($response)) {
+        if (is_string($response) && '' !== $response) {
             $response = array('message' => $response);
+        } elseif (!is_array($response)) {
+            $response = array();
         }
 
         return $response;
@@ -199,30 +198,20 @@ class Response
     /**
      * Time request took
      *
-     * @throws \Elastica\Exception\NotFoundException
-     * @return int                                  Time request took
+     * @return int Time request took
      */
     public function getEngineTime()
     {
-        if (!$this->hasData('took')) {
-            throw new NotFoundException("Unable to find the field [took]from the response");
-        }
-
         return $this->getData('took');
     }
 
     /**
      * Get the _shard statistics for the response
-     *
-     * @throws \Elastica\Exception\NotFoundException
+
      * @return array
      */
     public function getShardsStatistics()
     {
-        if (!$this->hasData('_shards')) {
-            throw new NotFoundException("Unable to find the field [_shards] from the response");
-        }
-
         return $this->getData('_shards');
     }
 }
