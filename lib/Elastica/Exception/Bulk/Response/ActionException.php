@@ -47,17 +47,16 @@ class ActionException extends BulkException
     {
         $error = $response->getError();
         $opType = $response->getOpType();
-        $data = $response->getData();
 
         $path = '';
-        if (isset($data['_index'])) {
-            $path.= '/' . $data['_index'];
+        if ($response->hasData('_index')) {
+            $path.= '/' . $response->getData('_index');
         }
-        if (isset($data['_type'])) {
-            $path.= '/' . $data['_type'];
+        if ($response->hasData('_type')) {
+            $path.= '/' . $response->getData('_type');
         }
-        if (isset($data['_id'])) {
-            $path.= '/' . $data['_id'];
+        if ($response->hasData('_id')) {
+            $path.= '/' . $response->getData('_id');
         }
         $message = "$opType: $path caused $error";
 

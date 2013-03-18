@@ -61,7 +61,7 @@ class Percolator
      *
      * @param  \Elastica\Document                                  $doc
      * @param  string|\Elastica\Query|\Elastica\Query\AbstractQuery $query Not implemented yet
-     * @return \Elastica\Response
+     * @return array
      */
     public function matchDoc(Document $doc, $query = null)
     {
@@ -69,9 +69,8 @@ class Percolator
         $data = array('doc' => $doc->getData());
 
         $response = $this->getIndex()->getClient()->request($path, Request::GET, $data);
-        $data = $response->getData();
 
-        return $data['matches'];
+        return $response->getData('matches');
     }
 
     /**

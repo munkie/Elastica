@@ -314,9 +314,8 @@ class Client
             && $data instanceof Document
             && ($data->isAutoPopulate() || $this->getConfigValue(array('document', 'autoPopulate'), false))
         ) {
-            $responseData = $response->getData();
-            if (isset($responseData['_version'])) {
-                $data->setVersion($responseData['_version']);
+            if ($response->hasData('_version')) {
+                $data->setVersion($response->getData('_version'));
             }
             if (isset($options['fields'])) {
                 $this->_populateDocumentFieldsFromResponse($response, $data, $options['fields']);
